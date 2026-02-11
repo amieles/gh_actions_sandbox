@@ -1,1 +1,1 @@
-select 40;
+select 60;

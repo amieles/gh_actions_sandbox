@@ -23,16 +23,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Runs a single command using the runners shell
-      - name: Get changed files
+      - name: Detect SQL changes
         id: changes
-        run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} HEAD)
-          {
-            echo "changed<<EOF"
-            echo "$CHANGED_FILES"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: shell
+          filters: |
+            sql:
+              - 'sql_scripts/**'
 
       - name: Print changed files
-        run: echo "Changed files: ${{ steps.changes.outputs.changed }}"
+        run: echo "Changed files: ${{ steps.changes.outputs.sql_files }}"
