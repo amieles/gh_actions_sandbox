@@ -31,5 +31,5 @@ jobs:
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }})
           echo "changed=$CHANGED_FILES" >> $GITHUB_OUTPUT
 
-      - name: Print changed files
-        run: echo "Changed files: ${{ steps.changes.outputs.changed }}"
+      # - name: Print changed files
+      #   run: echo "Changed files: ${{ steps.changes.outputs.changed }}"
