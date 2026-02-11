@@ -27,8 +27,7 @@ jobs:
       - name: Get changed files
         id: changes
         run: |
-          git fetch origin ${{ github.ref_name }}
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }})
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} HEAD)
           {
             echo "changed<<EOF"
             echo "$CHANGED_FILES"
