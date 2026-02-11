@@ -27,6 +27,9 @@ jobs:
       - name: Get changed files
         id: changes
         run: |
-          git fetch origin ${{ github.base_ref }}
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          git fetch origin ${{ github.ref_name }}
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }})
           echo "changed=$CHANGED_FILES" >> $GITHUB_OUTPUT
+
+      - name: Print changed files
+        run: echo "Changed files: ${{ steps.push_changes.outputs.changed }}"
