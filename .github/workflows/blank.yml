@@ -33,5 +33,5 @@ jobs:
               - 'sql_scripts/**'
 
       - name: Print changed files
-        if: $ {{ steps.changes.outputs.sql == 'true' }}
+        if: ${{ steps.changes.outputs.sql == 'true' }}
         run: echo "Changed files: ${{ steps.changes.outputs.sql }}"
