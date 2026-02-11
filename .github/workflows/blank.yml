@@ -33,6 +33,7 @@ jobs:
               - 'sql_scripts/**'
 
       - name: Print changed files
-        run: echo "last step"
-        # if: ${{ steps.changes.outputs.sql == 'true' }}
-        # run: echo "SQL files changed!"
+        run: |
+            for file in ${{ steps.changes.outputs.sql_files }}; do
+                echo "$file was changed"
+            done
