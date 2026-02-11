@@ -31,7 +31,7 @@ jobs:
           filters: |
             sql:
               - 'sql_scripts/**'
-      #
-      # - name: Print changed files
-      #   if: $ {{ steps.changes.outputs.sql == 'true' }}
-      #   run: echo "Changed files: ${{ steps.changes.outputs.sql_files }}"
+
+      - name: Print changed files
+        if: $ {{ steps.changes.outputs.sql == 'true' }}
+        run: echo "Changed files: ${{ steps.changes.outputs.sql }}"
