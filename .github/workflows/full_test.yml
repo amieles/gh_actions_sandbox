@@ -54,8 +54,8 @@ jobs:
           echo "-- Run at $(date)" >> $CONCAT_FILE
           echo "" >> $CONCAT_FILE
 
-          TABLE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '^sql_scripts/table/' || true)
-          VIEW_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '^sql_scripts/view/' || true)
+          TABLE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '^sql_scripts/tables/' || true)
+          VIEW_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '^sql_scripts/views/' || true)
 
           run_files () {
             for file in $1; do
@@ -64,7 +64,7 @@ jobs:
               echo "" >> $CONCAT_FILE
               echo "-- File: $file" >> $CONCAT_FILE
               cat "$file" >> $CONCAT_FILE
-              echo ";" >> $CONCAT_FILE
+              # echo ";" >> $CONCAT_FILE
 
               # snowsql -a $SNOWFLAKE_ACCOUNT \
               #   -u $SNOWFLAKE_USER \
