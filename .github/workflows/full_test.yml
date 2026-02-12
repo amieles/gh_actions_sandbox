@@ -39,7 +39,6 @@ jobs:
         run: pip install snowflake-cli
 
       - name: Run SQL scripts
-        id: build-sql
         if: steps.changed-files.outputs.files != ''
         # env:
         #   SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
@@ -89,12 +88,10 @@ jobs:
           run_files "$VIEW_FILES"
 
           echo "Concatenated file created at $CONCAT_FILE"
-          echo "concat_file=$CONCAT_FILE" >> $GITHUB_OUTPUT
 
       - name: Upload executed SQL artifact
         if: steps.changed-files.outputs.files != ''
         uses: actions/upload-artifact@v4
         with:
           name: executed-sql
-          path: ${{ steps.build-sql.outputs.concat_file }}
-          if-no-files-found: error
+          path: build/*.sql
