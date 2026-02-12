@@ -1,0 +1,96 @@
+name: Deploy SQL to Snowflake
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'sql_scripts/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required to detect changed files
+
+      - name: Get changed SQL files
+        id: changed-files
+        run: |
+          echo "Detecting changed files..."
+
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^sql_scripts/.*\.sql$' || true)
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Install SnowSQL
+        run: |
+          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.28-linux_x86_64.bash
+          bash snowsql-1.2.28-linux_x86_64.bash
+          echo "$HOME/.snowsql" >> $GITHUB_PATH
+
+      - name: Run SQL scripts
+        if: steps.changed-files.outputs.files != ''
+        # env:
+        #   SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+        #   SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+        #   SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+        #   SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+        #   SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+        #   SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+        #   SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+        run: |
+          echo "Preparing execution..."
+
+          mkdir -p build
+          CONCAT_FILE="build/executed_$(date +%Y%m%d_%H%M%S).sql"
+
+          echo "-- Executed SQL files" > $CONCAT_FILE
+          echo "-- Run at $(date)" >> $CONCAT_FILE
+          echo "" >> $CONCAT_FILE
+
+          TABLE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '^sql_scripts/table/' || true)
+          VIEW_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '^sql_scripts/view/' || true)
+
+          run_files () {
+            for file in $1; do
+              echo "Running $file"
+
+              echo "" >> $CONCAT_FILE
+              echo "-- File: $file" >> $CONCAT_FILE
+              cat "$file" >> $CONCAT_FILE
+              # echo ";" >> $CONCAT_FILE
+
+              # snowsql -a $SNOWFLAKE_ACCOUNT \
+              #   -u $SNOWFLAKE_USER \
+              #   -p $SNOWFLAKE_PASSWORD \
+              #   -r $SNOWFLAKE_ROLE \
+              #   -w $SNOWFLAKE_WAREHOUSE \
+              #   -d $SNOWFLAKE_DATABASE \
+              #   -s $SNOWFLAKE_SCHEMA \
+              #   -f "$file"
+            done
+          }
+
+          echo "Running table scripts first..."
+          run_files "$TABLE_FILES"
+
+          echo "Running view scripts..."
+          run_files "$VIEW_FILES"
+
+          echo "Concatenated file created at $CONCAT_FILE"
+
+      - name: Upload executed SQL artifact
+        if: steps.changed-files.outputs.files != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-sql
+          path: build/*.sql
