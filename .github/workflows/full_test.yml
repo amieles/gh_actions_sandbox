@@ -64,7 +64,7 @@ jobs:
               echo "" >> $CONCAT_FILE
               echo "-- File: $file" >> $CONCAT_FILE
               cat "$file" >> $CONCAT_FILE
-              # echo ";" >> $CONCAT_FILE
+              echo ";" >> $CONCAT_FILE
 
               # snowsql -a $SNOWFLAKE_ACCOUNT \
               #   -u $SNOWFLAKE_USER \
