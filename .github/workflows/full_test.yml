@@ -16,9 +16,7 @@ jobs:
         ${{ github.ref_name == 'main' && 'PROD_DB' ||
             github.ref_name == 'staging' && 'STAGING_DB' ||
             'DEV_DB' }}
-      DT_LAG: |
-        ${{ github.ref_name == 'main' && '10' ||
-            '4' }}
+      DT_LAG: ${{ github.ref_name == 'main' && '10' || '4' }}
 
     steps:
       - name: Checkout repo
