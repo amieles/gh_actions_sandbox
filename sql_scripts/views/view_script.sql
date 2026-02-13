@@ -1,2 +1,2 @@
 select {dt_lag}
-limit 100;
+limit 10;

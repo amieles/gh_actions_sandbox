@@ -79,7 +79,7 @@ jobs:
               echo "-- File: $file" >> $CONCAT_FILE
 
               rendered_file=$(mktemp)
-              sed "s/{dt_lag}/${DT_LAG}/g" "$file" > "$rendered_file"
+              sed "s|{dt_lag}|${DT_LAG}|g" "$file" > "$rendered_file"
 
               if grep -q "{dt_lag}" "$file" && grep -q "{dt_lag}" "$rendered_file"; then
                 echo "ERROR: dt_lag placeholder not rendered in $file"
