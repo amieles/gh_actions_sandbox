@@ -11,6 +11,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      SNOWFLAKE_DATABASE: |
+        ${{ github.ref_name == 'main' && 'PROD_DB' ||
+            github.ref_name == 'staging' && 'STAGING_DB' ||
+            'DEV_DB' }}
+      DT_LAG: |
+        ${{ github.ref_name == 'main' && '10' ||
+            '4' }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -61,25 +70,28 @@ jobs:
           TABLE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/tables/' || true)
           VIEW_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/views/' || true)
 
+
           run_files () {
             for file in $1; do
               echo "Running $file"
 
               echo "" >> $CONCAT_FILE
               echo "-- File: $file" >> $CONCAT_FILE
-              cat "$file" >> $CONCAT_FILE
-              # echo ";" >> $CONCAT_FILE
 
-              # snowsql -a $SNOWFLAKE_ACCOUNT \
-              #   -u $SNOWFLAKE_USER \
-              #   -p $SNOWFLAKE_PASSWORD \
-              #   -r $SNOWFLAKE_ROLE \
-              #   -w $SNOWFLAKE_WAREHOUSE \
-              #   -d $SNOWFLAKE_DATABASE \
-              #   -s $SNOWFLAKE_SCHEMA \
-              #   -f "$file"
+              rendered_file=$(mktemp)
+              sed "s/{dt_lag}/${DT_LAG}/g" "$file" > "$rendered_file"
+
+              if grep -q "{dt_lag}" "$file" && grep -q "{dt_lag}" "$rendered_file"; then
+                echo "ERROR: dt_lag placeholder not rendered in $file"
+                exit 1
+              fi
+
+              cat "$rendered_file" >> $CONCAT_FILE
+
+              # snowsql ... -f "$rendered_file"
             done
           }
+
 
           echo "Running table scripts first..."
           run_files "$TABLE_FILES"
@@ -95,3 +107,4 @@ jobs:
         with:
           name: executed-sql
           path: build/*.sql
+          retention-days: 30

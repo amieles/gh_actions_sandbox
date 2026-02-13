@@ -1,1 +1,2 @@
-select 832;
+select {dt_lag}
+limit 100;
