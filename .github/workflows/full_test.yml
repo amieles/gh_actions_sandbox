@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "Detecting changed files..."
 
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^sql_scripts/.*\.sql$' || true)
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AM ${{ github.event.before }} ${{ github.sha }} | grep '^sql_scripts/.*\.sql$' || true)
 
           echo "Changed files:"
           echo "$CHANGED_FILES"
