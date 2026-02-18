@@ -87,6 +87,7 @@ jobs:
               cat "$rendered_file" >> $CONCAT_FILE
 
               snow sql \
+                --temporary-connection \
                 --account "$SNOWFLAKE_ACCOUNT" \
                 --user "$SNOWFLAKE_USER" \
                 --private-key-path "$PRIVATE_KEY_FILE" \
