@@ -12,10 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SNOWFLAKE_DATABASE: |
-        ${{ github.ref_name == 'main' && ${{ secrets.SNOWFLAKE_DATABASE }} ||
-            github.ref_name == 'staging' && 'SNOWFLAKE_QA_DB_NAME' ||
-            'DEV_DB' }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+        #   |
+        # ${{ github.ref_name == 'main' && ${{ secrets.SNOWFLAKE_DATABASE }} ||
+        #     github.ref_name == 'staging' && 'SNOWFLAKE_QA_DB_NAME' ||
+        #     'DEV_DB' }}
       SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
       DT_LAG: ${{ github.ref_name == 'main' && '10' || '4' }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
