@@ -94,7 +94,7 @@ jobs:
                 --warehouse "$SNOWFLAKE_WH" \
                 --database "$SNOWFLAKE_DATABASE" \
                 --schema "$SNOWFLAKE_SCHEMA" \
-                --file "$rendered_file"
+                --filename "$rendered_file"
             done
           }
 
