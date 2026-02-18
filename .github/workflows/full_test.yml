@@ -86,7 +86,7 @@ jobs:
 
               cat "$rendered_file" >> $CONCAT_FILE
 
-              snowsql --version
+              snow --version
               # ... -f "$rendered_file"
             done
           }
