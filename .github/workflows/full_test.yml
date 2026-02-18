@@ -95,7 +95,7 @@ jobs:
                 --warehouse "$SNOWFLAKE_WH" \
                 --database "$SNOWFLAKE_DATABASE" \
                 --schema "$SNOWFLAKE_SCHEMA" \
-                --authenticator snowflake_jwt
+                --authenticator SNOWFLAKE_JWT
                 --filename "$rendered_file"
             done
           }
