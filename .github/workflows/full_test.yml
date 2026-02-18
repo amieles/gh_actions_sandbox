@@ -86,8 +86,15 @@ jobs:
 
               cat "$rendered_file" >> $CONCAT_FILE
 
-              snow --version
-              # ... -f "$rendered_file"
+              snow  \
+                --account "$SNOWFLAKE_ACCOUNT" \
+                --user "$SNOWFLAKE_USER" \
+                --private-key-path "$PRIVATE_KEY_FILE" \
+                --role "$SNOWFLAKE_ROLE" \
+                --warehouse "$SNOWFLAKE_WH" \
+                --database "$SNOWFLAKE_DATABASE" \
+                --schema "$SNOWFLAKE_SCHEMA" \
+                --file "$rendered_file"
             done
           }
 
