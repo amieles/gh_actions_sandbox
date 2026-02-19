@@ -53,76 +53,74 @@ jobs:
           echo "$HOME/bin" >> $GITHUB_PATH
           snowsql -v
 
-      - name: test snowsql
-        run: snowsql -v
+      - name: Run SQL scripts
+        if: steps.changed-files.outputs.files != ''
+        run: |
+          echo "Preparing execution..."
 
-      # - name: Run SQL scripts
-      #   if: steps.changed-files.outputs.files != ''
-      #   run: |
-      #     echo "Preparing execution..."
-      #
-      #     mkdir -p build
-      #     CONCAT_FILE="build/executed_$(date +%Y%m%d_%H%M%S).sql"
-      #
-      #     echo "-- Executed SQL files" > $CONCAT_FILE
-      #     echo "-- Run at $(date)" >> $CONCAT_FILE
-      #     echo "" >> $CONCAT_FILE
-      #
-      #     # Write private key to file
-      #     PRIVATE_KEY_FILE=$(mktemp)
-      #     echo "$SNOWFLAKE_PRIVATE_KEY" > "$PRIVATE_KEY_FILE"
-      #     chmod 600 "$PRIVATE_KEY_FILE"
-      #
-      #     TABLE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/tables/' || true)
-      #     VIEW_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/views/' || true)
-      #
-      #
-      #     run_files () {
-      #       for file in $1; do
-      #         echo "Running $file"
-      #
-      #         echo "" >> $CONCAT_FILE
-      #         echo "-- File: $file" >> $CONCAT_FILE
-      #
-      #         rendered_file=$(mktemp)
-      #         sed "s|{dt_lag}|${DT_LAG}|g" "$file" > "$rendered_file"
-      #
-      #         if grep -q "{dt_lag}" "$file" && grep -q "{dt_lag}" "$rendered_file"; then
-      #           echo "ERROR: dt_lag placeholder not rendered in $file"
-      #           exit 1
-      #         fi
-      #
-      #         cat "$rendered_file" >> $CONCAT_FILE
-      #
-      #         snow sql \
-      #           --temporary-connection \
-      #           --account "$SNOWFLAKE_ACCOUNT" \
-      #           --user "$SNOWFLAKE_USER" \
-      #           --private-key-path "$PRIVATE_KEY_FILE" \
-      #           --role "$SNOWFLAKE_ROLE" \
-      #           --warehouse "$SNOWFLAKE_WH" \
-      #           --database "$SNOWFLAKE_DATABASE" \
-      #           --schema "$SNOWFLAKE_SCHEMA" \
-      #           --authenticator SNOWFLAKE_JWT \
-      #           --filename "$rendered_file"
-      #       done
-      #     }
-      #
-      #
-      #     echo "Running table scripts first..."
-      #     run_files "$TABLE_FILES"
-      #
-      #     echo "Running view scripts..."
-      #     run_files "$VIEW_FILES"
-      #
-      #     rm -f "$PRIVATE_KEY_FILE"
-      #
-      #     echo "Concatenated file created at $CONCAT_FILE"
-      #
-      # - name: Upload executed SQL artifact
-      #   if: steps.changed-files.outputs.files != ''
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: executed-sql
-      #     path: build/*.sql
-      #     retention-days: 30
+          mkdir -p build
+          CONCAT_FILE="build/executed_$(date +%Y%m%d_%H%M%S).sql"
+
+          echo "-- Executed SQL files" > $CONCAT_FILE
+          echo "-- Run at $(date)" >> $CONCAT_FILE
+          echo "" >> $CONCAT_FILE
+
+          # Write private key to file
+          PRIVATE_KEY_FILE=$(mktemp)
+          echo "$SNOWFLAKE_PRIVATE_KEY" > "$PRIVATE_KEY_FILE"
+          chmod 600 "$PRIVATE_KEY_FILE"
+
+          TABLE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/tables/' || true)
+          VIEW_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/views/' || true)
+
+
+          run_files () {
+            for file in $1; do
+              echo "Running $file"
+
+              echo "" >> $CONCAT_FILE
+              echo "-- File: $file" >> $CONCAT_FILE
+
+              rendered_file=$(mktemp)
+              sed "s|{dt_lag}|${DT_LAG}|g" "$file" > "$rendered_file"
+
+              if grep -q "{dt_lag}" "$file" && grep -q "{dt_lag}" "$rendered_file"; then
+                echo "ERROR: dt_lag placeholder not rendered in $file"
+                exit 1
+              fi
+
+              cat "$rendered_file" >> $CONCAT_FILE
+
+              snowsql \
+                -a "$SNOWFLAKE_ACCOUNT" \
+                -u "$SNOWFLAKE_USER" \
+                -r "$SNOWFLAKE_ROLE" \
+                -w "$SNOWFLAKE_WH" \
+                -d "$SNOWFLAKE_DATABASE" \
+                -s "$SNOWFLAKE_SCHEMA" \
+                --private-key-path "$PRIVATE_KEY_FILE" \
+                --authenticator SNOWFLAKE_JWT \
+                -f "$rendered_file" \
+                -o exit_on_error=false
+
+            done
+          }
+
+
+          echo "Running table scripts first..."
+          run_files "$TABLE_FILES"
+
+          echo "Running view scripts..."
+          run_files "$VIEW_FILES"
+
+          rm -f "$PRIVATE_KEY_FILE"
+
+          echo "Concatenated file created at $CONCAT_FILE"
+
+      - name: Upload executed SQL artifact
+        if: steps.changed-files.outputs.files != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-sql
+          path: build/*.sql
+          retention-days: 30
