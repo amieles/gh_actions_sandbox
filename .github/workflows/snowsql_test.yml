@@ -51,6 +51,7 @@ jobs:
           SNOWSQL_DEST=~/bin 
           SNOWSQL_LOGIN_SHELL=~/.profile 
           bash snowsql-1.4.5-linux_x86_64.bash
+          snowsql -v
 
       # - name: Run SQL scripts
       #   if: steps.changed-files.outputs.files != ''
