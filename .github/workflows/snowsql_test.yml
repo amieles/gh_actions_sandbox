@@ -52,6 +52,9 @@ jobs:
           source ~/.profile
           snowsql -v
 
+      - name: test snowsql
+        run: snowsql -v
+
       # - name: Run SQL scripts
       #   if: steps.changed-files.outputs.files != ''
       #   run: |
