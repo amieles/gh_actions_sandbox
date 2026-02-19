@@ -1,0 +1,122 @@
+name: Deploy SQL to Snowflake v2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'sql_scripts/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+        #   |
+        # ${{ github.ref_name == 'main' && ${{ secrets.SNOWFLAKE_DATABASE }} ||
+        #     github.ref_name == 'staging' && 'SNOWFLAKE_QA_DB_NAME' ||
+        #     'DEV_DB' }}
+      SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+      DT_LAG: ${{ github.ref_name == 'main' && '10' || '4' }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WH: ${{ secrets.SNOWFLAKE_WH }}
+      SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required to detect changed files
+
+      - name: Get changed SQL files
+        id: changed-files
+        run: |
+          echo "Detecting changed files..."
+
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.before }} ${{ github.sha }} | grep '^sql_scripts/.*\.sql$' || true)
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Install Snowflake CLI
+        run: |
+          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.4/linux_x86_64/snowsql-1.4.5-linux_x86_64.bash
+          snowsql -v
+
+      # - name: Run SQL scripts
+      #   if: steps.changed-files.outputs.files != ''
+      #   run: |
+      #     echo "Preparing execution..."
+      #
+      #     mkdir -p build
+      #     CONCAT_FILE="build/executed_$(date +%Y%m%d_%H%M%S).sql"
+      #
+      #     echo "-- Executed SQL files" > $CONCAT_FILE
+      #     echo "-- Run at $(date)" >> $CONCAT_FILE
+      #     echo "" >> $CONCAT_FILE
+      #
+      #     # Write private key to file
+      #     PRIVATE_KEY_FILE=$(mktemp)
+      #     echo "$SNOWFLAKE_PRIVATE_KEY" > "$PRIVATE_KEY_FILE"
+      #     chmod 600 "$PRIVATE_KEY_FILE"
+      #
+      #     TABLE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/tables/' || true)
+      #     VIEW_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/views/' || true)
+      #
+      #
+      #     run_files () {
+      #       for file in $1; do
+      #         echo "Running $file"
+      #
+      #         echo "" >> $CONCAT_FILE
+      #         echo "-- File: $file" >> $CONCAT_FILE
+      #
+      #         rendered_file=$(mktemp)
+      #         sed "s|{dt_lag}|${DT_LAG}|g" "$file" > "$rendered_file"
+      #
+      #         if grep -q "{dt_lag}" "$file" && grep -q "{dt_lag}" "$rendered_file"; then
+      #           echo "ERROR: dt_lag placeholder not rendered in $file"
+      #           exit 1
+      #         fi
+      #
+      #         cat "$rendered_file" >> $CONCAT_FILE
+      #
+      #         snow sql \
+      #           --temporary-connection \
+      #           --account "$SNOWFLAKE_ACCOUNT" \
+      #           --user "$SNOWFLAKE_USER" \
+      #           --private-key-path "$PRIVATE_KEY_FILE" \
+      #           --role "$SNOWFLAKE_ROLE" \
+      #           --warehouse "$SNOWFLAKE_WH" \
+      #           --database "$SNOWFLAKE_DATABASE" \
+      #           --schema "$SNOWFLAKE_SCHEMA" \
+      #           --authenticator SNOWFLAKE_JWT \
+      #           --filename "$rendered_file"
+      #       done
+      #     }
+      #
+      #
+      #     echo "Running table scripts first..."
+      #     run_files "$TABLE_FILES"
+      #
+      #     echo "Running view scripts..."
+      #     run_files "$VIEW_FILES"
+      #
+      #     rm -f "$PRIVATE_KEY_FILE"
+      #
+      #     echo "Concatenated file created at $CONCAT_FILE"
+      #
+      # - name: Upload executed SQL artifact
+      #   if: steps.changed-files.outputs.files != ''
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: executed-sql
+      #     path: build/*.sql
+      #     retention-days: 30
