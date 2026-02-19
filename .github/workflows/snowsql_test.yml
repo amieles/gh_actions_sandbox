@@ -48,7 +48,9 @@ jobs:
       - name: Install Snowflake CLI
         run: |
           curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.4/linux_x86_64/snowsql-1.4.5-linux_x86_64.bash
-          snowsql -v
+          SNOWSQL_DEST=~/bin 
+          SNOWSQL_LOGIN_SHELL=~/.profile 
+          bash snowsql-1.4.5-linux_x86_64.bash
 
       # - name: Run SQL scripts
       #   if: steps.changed-files.outputs.files != ''
