@@ -88,6 +88,7 @@ jobs:
 
               snow sql \
                 --temporary-connection \
+                --on-error continue \
                 --account "$SNOWFLAKE_ACCOUNT" \
                 --user "$SNOWFLAKE_USER" \
                 --private-key-path "$PRIVATE_KEY_FILE" \

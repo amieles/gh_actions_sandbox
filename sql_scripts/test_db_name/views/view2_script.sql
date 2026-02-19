@@ -5,4 +5,4 @@ select
 	'test_string' as col2
 limit 2;
 
-grant select on snowflake_sandbox_db.test_schema.view2 to role non_existent_role; 
+grant select on snowflake_sandbox_db.test_schema.view2 to role non_existent_role2; 
