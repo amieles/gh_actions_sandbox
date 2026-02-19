@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - main
-    # paths:
-    #   - 'sql_scripts/**'
+    paths:
+      - 'sql_scripts/**'
 
 jobs:
   deploy:
