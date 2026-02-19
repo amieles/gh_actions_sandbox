@@ -1,0 +1,96 @@
+name: Parse and Concat SQL Files
+
+on:
+  pull-request:
+    branches:
+      - main
+    paths:
+      - 'sql_scripts/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      DT_LAG: '10'
+
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed SQL files
+        id: changed-files
+        run: |
+          echo "Detecting changed files..."
+
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR HEAD^1 HEAD | grep '^sql_scripts/.*\.sql$' || true)
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Render SQL scripts
+        if: steps.changed-files.outputs.files != ''
+        run: |
+
+          mkdir -p build
+          CONCAT_FILE="build/rendered_$(date +%Y%m%d_%H%M%S).sql"
+
+          echo "-- Rendered SQL files" > $CONCAT_FILE
+          echo "-- Rendered at $(date)" >> $CONCAT_FILE
+          echo "" >> $CONCAT_FILE
+
+          TABLE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/tables/' || true)
+          VIEW_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/views/' || true)
+          PROCEDURE_FILES=$(echo "${{ steps.changed-files.outputs.files }}" | grep '**/procedures/' || true)
+
+          render_files () {
+            for file in $1; do
+              echo "Rendering $file"
+
+              echo "" >> $CONCAT_FILE
+              echo "-- File: $file" >> $CONCAT_FILE
+
+              rendered_file=$(mktemp)
+              sed "s|{dt_lag}|'${DT_LAG}'|g" "$file" > "$rendered_file"
+
+              if grep -q "{dt_lag}" "$file" && grep -q "{dt_lag}" "$rendered_file"; then
+                echo "ERROR: dt_lag placeholder not rendered in $file"
+                exit 1
+              fi
+
+              cat "$rendered_file" >> $CONCAT_FILE
+
+            done
+          }
+
+
+          echo "Rendering table scripts..."
+          render_files "$TABLE_FILES"
+
+          echo "Rendering view scripts..."
+          render_files "$VIEW_FILES"
+
+          echo "Rendering procedure scripts..."
+          render_files "$PROCEDURE_FILES"
+
+
+          echo "Concatenated file created at $CONCAT_FILE"
+
+      - name: Upload executed SQL artifact
+        if: steps.changed-files.outputs.files != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-sql
+          path: build/*.sql
+          retention-days: 30
+
+      - name: Install sqlfluff
+        run: pip install sqlfluff
+
