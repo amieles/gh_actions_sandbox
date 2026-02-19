@@ -50,6 +50,7 @@ jobs:
           curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.4/linux_x86_64/snowsql-1.4.5-linux_x86_64.bash
           SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.4.5-linux_x86_64.bash
           source ~/.profile
+          echo "$HOME/bin" >> $GITHUB_PATH
           snowsql -v
 
       - name: test snowsql
