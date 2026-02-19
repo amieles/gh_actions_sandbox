@@ -8,7 +8,7 @@ on:
       - 'sql_scripts/**'
 
 jobs:
-  deploy:
+  render_and_parse:
     runs-on: ubuntu-latest
 
     env:
@@ -92,5 +92,7 @@ jobs:
           retention-days: 30
 
       - name: Install sqlfluff
-        run: pip install sqlfluff
+        run: |
+          pip install sqlfluff
+          sqlfluff parse build/*.sql --dialect snowflake
 
