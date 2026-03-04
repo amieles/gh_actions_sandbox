@@ -1,0 +1,20 @@
+name: Multiline env test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  env_var_test:
+    runs-on: ubuntu-latest
+
+    env:
+      DT_LAG: ${{ github.ref_name == 'main' && main_identified || main_not_identified }}
+
+    steps:
+
+      - name: print env vars
+        uses: actions/checkout@v4
+        run: |
+          echo "hello: ${DT_LAG}"
