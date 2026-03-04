@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DT_LAG: ${{ github.ref_name == 'main' && main_identified || main_not_identified }}
+      DT_LAG: ${{ github.ref_name == 'main' && 'main_identified' || 'main_not_identified' }}
 
     steps:
 
