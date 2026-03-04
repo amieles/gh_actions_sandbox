@@ -16,6 +16,11 @@ jobs:
           '12 hours' 
         }}
       DT_LAG2: '12 hours'
+      ENV_NAME: >-
+        ${{ 
+          github.ref_name == 'main' && vars.PROD_NAME || 
+          'DEV' 
+        }}
 
     steps:
 
@@ -23,3 +28,4 @@ jobs:
         run: |
           echo "hello: ${DT_LAG}"
           echo "original ${DT_LAG2}"
+          echo "env_name: ${ENV_NAME}"
