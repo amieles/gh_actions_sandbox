@@ -15,6 +15,5 @@ jobs:
     steps:
 
       - name: print env vars
-        uses: actions/checkout@v4
         run: |
           echo "hello: ${DT_LAG}"
