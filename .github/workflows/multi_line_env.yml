@@ -10,7 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DT_LAG: ${{ github.ref_name == 'main' && '8 minutes' || '12 hours' }}
+      DT_LAG: >-
+        ${{ 
+          github.ref_name == 'main' && '8 minutes' || 
+          '12 hours' 
+        }}
       DT_LAG2: '12 hours'
 
     steps:
