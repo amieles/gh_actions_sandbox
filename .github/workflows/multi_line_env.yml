@@ -10,10 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DT_LAG: ${{ github.ref_name == 'main' && 'main_identified' || 'main_not_identified' }}
+      DT_LAG: ${{ github.ref_name == 'main' && '8 minutes' || '12 hours' }}
+      DT_LAG2: '12 hours'
 
     steps:
 
       - name: print env vars
         run: |
           echo "hello: ${DT_LAG}"
+          echo "original ${DT_LAG2}"
